@@ -87,80 +87,58 @@ fn parse_list(output: &String) -> PackagesResponse {
 /// Parse info output
 fn parse_info(output: &String) -> PackagesResponse {
     let mut res = response("info");
-    // let mut lines = output.lines();
 
-    // let sections: Vec<&str>;
-    // while !lines.next().unwrap_or("Installed packages") {}
-    // let line = lines.next().unwrap_or_default();
-    // if !line.is_empty() {
-    //     line
-    // }
+    let package_split = Regex::new(r"\n\n").unwrap();
+    let field_split = Regex::new(r"\n\S").unwrap();
+    let parts = package_split.split(output.as_str());
+    let mut installed = false;
+    for mut part in parts {
+        if part.starts_with("Installed packages\n") {
+            installed = true;
+            part = &part[19..];
+        }
+        if part.starts_with("Available packages\n") {
+            installed = false;
+            part = &part[19..]
+        }
+        let fields: Vec<&str> = field_split.split(part).collect();
+        if installed {
+            res.packages.push(Package {
+                name: clean(fields[0]),
+                arch: clean(fields[4]),
+                version: Some(clean(fields[2])),
+                old_version: None,
+                repository: Some(clean(fields[7])),
+                size: Some(clean(fields[5])),
+                download: None,
+                description: Some(clean(fields[11])),
+                url: Some(clean(fields[9])),
+                license: Some(clean(fields[10])),
+                installed,
+            });
+        } else {
+            res.packages.push(Package {
+                name: clean(fields[0]),
+                arch: clean(fields[4]),
+                version: Some(clean(fields[2])),
+                old_version: None,
+                repository: Some(clean(fields[8])),
+                size: Some(clean(fields[6])),
+                download: Some(clean(fields[5])),
+                description: Some(clean(fields[12])),
+                url: Some(clean(fields[10])),
+                license: Some(clean(fields[11])),
+                installed,
+            });
+        }
+    }
 
-    // let out_split: Vec<&str> = sections_re.split(output.as_str()).collect();
-    // println!(
-    //     "INSTALLED PACKAGES:\n{}\n\nAVAILABLE PACKAGES:\n{}\n\nEXTRA PACKAGES:\n{}",
-    //     out_split[0], out_split[1], out_split[2]
-    // );
-
-    //===========================================
-    // This is a split between new and old code
-    //===========================================
-
-    // let re = Regex::new(r"\n\S").unwrap();
-    // let parts = re.split(output.as_str());
-
-    // let mut lines = output.split("~~~");
-    // if output.contains("Repositories loaded.") {
-    //     res.messages.push("Updated repos"));
-    //     while !lines.next().unwrap().contains("Repositories loaded.") {}
-    // }
-    // let mut installed = false;
-    // let mut previous: &str = "";
-    // let mut byte_size: f64 = 0.0;
-    // loop {
-    //     let line = lines.next().unwrap_or_default();
-    //     if line.is_empty() {
-    //         break;
-    //     }
-    //     let mut parts: Vec<&str> = line.split("---").collect();
-    //     parts[0] = parts[0].trim_matches('"');
-    //     if (previous == parts[0]) && installed {
-    //         let i = res.packages.len() - 1;
-    //         res.packages[i].repository = Some(parts[3]));
-    //         res.packages[i].download = Some(simplify_byte_size(parts[5]));
-    //     } else {
-    //         if parts[3] == "@System" {
-    //             installed = true;
-    //         } else {
-    //             installed = false;
-    //         }
-    //         let mut description: Option<String> = None;
-    //         let mut url: Option<String> = None;
-    //         let mut license: Option<String> = None;
-    //         if parts.len() == 9 {
-    //             description = Some(parts[6]));
-    //             url = Some(parts[7]));
-    //             license = Some(parts[8]));
-    //         }
-    //         byte_size += parts[4].parse::<f64>().unwrap();
-    //         res.packages.push(Package {
-    //             name: parts[0]),
-    //             arch: parts[1]),
-    //             version: Some(parts[2])),
-    //             old_version: None,
-    //             repository: Some(parts[3])),
-    //             size: Some(simplify_byte_size(parts[4])),
-    //             download: Some(simplify_byte_size(parts[5])),
-    //             description,
-    //             url,
-    //             license,
-    //             installed,
-    //         });
-    //     }
-    //     previous = parts[0];
-    // }
-    // res.packages_size = Some(simplify_byte_size(byte_size.to_string().as_str()));
     return res;
+}
+
+fn clean(to_clean: &str) -> String {
+    let clean = Regex::new(r"[\S ]*: | +:").unwrap();
+    return clean.replace_all(to_clean, "").to_string();
 }
 
 /// Parse search output
