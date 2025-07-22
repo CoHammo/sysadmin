@@ -107,7 +107,7 @@ pub fn match_packages_command(
 ) -> Exit {
     let manager: &PackageManager;
     let mut args: Vec<&str>;
-    let final_terms: &Option<Vec<String>>;
+    let terms: &Option<Vec<String>>;
     let fail_message: &str;
     let parser: fn(&String) -> PackagesResponse;
 
@@ -144,7 +144,7 @@ pub fn match_packages_command(
             if *extras {
                 args.push(&manager.list.extras)
             }
-            final_terms = packages;
+            terms = packages;
             fail_message = "Failed to list packages";
             parser = manager.list.parser;
 
@@ -164,7 +164,7 @@ pub fn match_packages_command(
 
         PackagesCommands::Info { packages } => {
             args = manager.info.command.to_vec();
-            final_terms = packages;
+            terms = packages;
             fail_message = "Failed to get info for package(s)";
             parser = manager.info.parser;
 
@@ -182,38 +182,18 @@ pub fn match_packages_command(
             // return exit;
         }
 
-        PackagesCommands::Search { terms } => {
+        PackagesCommands::Search { search_terms } => {
             args = manager.search.command.to_vec();
-            final_terms = terms;
+            terms = search_terms;
             fail_message = "Failed to search for package(s)";
             parser = manager.search.parser;
-
-            // let mut exit = process_command(
-            //     manager.manager,
-            //     manager.search.command.to_vec(),
-            //     terms,
-            //     "Failed to search for packages",
-            //     manager.search.parser,
-            // );
-            // if exit.exit_code == 0 {
-            //     let res = exit.packages_response.as_mut().unwrap();
-            //     res.packages_length = Some(res.packages.len());
-            // }
-            // return exit;
         }
 
         PackagesCommands::Refresh => {
             args = manager.refresh_data.command.to_vec();
-            final_terms = &None;
+            terms = &None;
             fail_message = "Failed to refresh packages data";
             parser = manager.refresh_data.parser;
-            // return process_command(
-            //     manager.manager,
-            //     manager.refresh_data.command.to_vec(),
-            //     &None,
-            //     "Failed to refresh packages data",
-            //     manager.refresh_data.parser,
-            // );
         }
 
         PackagesCommands::Update { fake } => {
@@ -246,55 +226,28 @@ pub fn match_packages_command(
                     return exit;
                 }
             }
-            // let res = exit.packages_response.as_mut().unwrap();
-            // res.packages_length = Some(res.packages.len());
-            // res.uninstalled_packages_length = Some(res.uninstalled_packages.len());
             return exit;
         }
 
         PackagesCommands::Install { packages } => {
             args = manager.install.command.to_vec();
-            final_terms = packages;
+            terms = packages;
             fail_message = "Failed to install package(s)";
             parser = manager.install.parser;
-            // let mut exit = process_command(
-            //     manager.manager,
-            //     manager.install.command.to_vec(),
-            //     packages,
-            //     "Failed to install package(s)",
-            //     manager.install.parser,
-            // );
-            // if exit.exit_code == 0 {
-            //     let res = exit.packages_response.as_mut().unwrap();
-            //     res.packages_length = Some(res.packages.len());
-            // }
-            // return exit;
         }
 
         PackagesCommands::Uninstall { packages } => {
             args = manager.uninstall.command.to_vec();
-            final_terms = packages;
+            terms = packages;
             fail_message = "Failed to uninstall package(s)";
             parser = manager.uninstall.parser;
-            // let mut exit = process_command(
-            //     manager.manager,
-            //     manager.uninstall.command.to_vec(),
-            //     packages,
-            //     "Failed to uninstall packages",
-            //     manager.uninstall.parser,
-            // );
-            // if exit.exit_code == 0 {
-            //     let res = exit.packages_response.as_mut().unwrap();
-            //     res.uninstalled_packages_length = Some(res.uninstalled_packages.len());
-            // }
-            // return exit;
         }
     }
 
     return process_command(
         manager.manager,
         args,
-        final_terms,
+        terms,
         fail_message,
         parser,
         output_type,
@@ -338,7 +291,7 @@ fn process_command(
                         real_command: package_manager,
                         out: "No readable output".to_string(),
                         packages_response: None,
-                        error_message: Some("Operation was successful, but could not read output from underlying packages manager".to_string()),
+                        error_message: Some("Operation was successful, but the output could not be read from the native package manager".to_string()),
                     };
                 }
             };

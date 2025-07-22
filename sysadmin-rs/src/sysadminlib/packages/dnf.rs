@@ -1,7 +1,5 @@
-use regex::Regex;
-use std::{ptr::null, str::Lines};
-
 use super::*;
+use regex::Regex;
 
 pub static DNF: PackageManager = PackageManager {
     manager: "dnf",
@@ -13,12 +11,6 @@ pub static DNF: PackageManager = PackageManager {
         parser: parse_list,
     },
     info: InfoArgs {
-        // command: &[
-        //     "repoquery",
-        //     "--queryformat=%{name}---%{arch}---%{version}---%{repoid}---%{installsize}---%{downloadsize}---%{description}---%{url}---%{license}~~~",
-        //     "--installed",
-        //     "--available",
-        // ],
         command: &["info"],
         parser: parse_info,
     },
@@ -31,16 +23,16 @@ pub static DNF: PackageManager = PackageManager {
         parser: parse_refresh,
     },
     update: UpdateArgs {
-        commands: &[&["upgrade"]],
+        commands: &[&["upgrade", "-y"]],
         fake: "--downloadonly",
         parser: parse_update,
     },
     install: InstallArgs {
-        command: &["install"],
+        command: &["install", "-y"],
         parser: parse_install,
     },
     uninstall: UninstallArgs {
-        command: &["remove"],
+        command: &["remove", "-y"],
         parser: parse_uninstall,
     },
 };
@@ -63,12 +55,14 @@ fn parse_list(output: &String) -> PackagesResponse {
                 break;
             }
             let parts: Vec<&str> = line.split_whitespace().collect();
-            let first_parts: Vec<&str> = parts[0].split(".").collect();
+            let name_and_arch: Vec<&str> = parts[0].split(".").collect();
             let installed = stop != "Available packages";
             res.packages.push(Package {
-                name: first_parts[0].to_string(),
-                arch: first_parts[1].to_string(),
-                version: Some(parts[1].to_string()),
+                name: name_and_arch[0].to_string(),
+                arch: name_and_arch[1].to_string(),
+                version: Some(
+                    parts[1].to_string().split("-").collect::<Vec<&str>>()[0].to_string(),
+                ),
                 old_version: None,
                 repository: Some(parts[2].to_string()),
                 size: None,
@@ -88,9 +82,8 @@ fn parse_list(output: &String) -> PackagesResponse {
 fn parse_info(output: &String) -> PackagesResponse {
     let mut res = response("info");
 
-    let package_split = Regex::new(r"\n\n").unwrap();
     let field_split = Regex::new(r"\n\S").unwrap();
-    let parts = package_split.split(output.as_str());
+    let parts = output.split("\n\n");
     let mut installed = false;
     for mut part in parts {
         if part.starts_with("Installed packages\n") {
@@ -132,7 +125,7 @@ fn parse_info(output: &String) -> PackagesResponse {
             });
         }
     }
-
+    res.packages_length = Some(res.packages.len());
     return res;
 }
 

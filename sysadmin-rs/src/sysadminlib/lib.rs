@@ -59,7 +59,7 @@ pub enum PackagesCommands {
         packages: Option<Vec<String>>,
     },
     Search {
-        terms: Option<Vec<String>>,
+        search_terms: Option<Vec<String>>,
     },
     Refresh,
     Update {

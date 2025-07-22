@@ -38,29 +38,29 @@ pub static APK: PackageManager = PackageManager {
 
 fn parse_list(output: &String) -> PackagesResponse {
     let mut res = response("list");
-    todo!();
+    return res;
 }
 
 fn parse_info(output: &String) -> PackagesResponse {
-    todo!();
+    return response("info");
 }
 
 fn parse_search(output: &String) -> PackagesResponse {
-    todo!();
+    return response("search");
 }
 
 fn parse_refresh(output: &String) -> PackagesResponse {
-    todo!();
+    return response("refresh");
 }
 
 fn parse_update(output: &String) -> PackagesResponse {
-    todo!();
+    return response("update");
 }
 
 fn parse_install(output: &String) -> PackagesResponse {
-    todo!();
+    return response("install");
 }
 
 fn parse_uninstall(output: &String) -> PackagesResponse {
-    todo!();
+    return response("uninstall");
 }
